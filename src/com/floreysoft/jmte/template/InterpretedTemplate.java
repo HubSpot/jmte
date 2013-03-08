@@ -185,9 +185,7 @@ public class InterpretedTemplate extends AbstractTemplate {
 			} else {
 				localSkip = !(Boolean) elseIfToken.evaluate(context);
 			}
-			
-			
-						
+				
 			Token contentToken;
 			while((contentToken = tokenStream.currentToken()) != null
 					&& !(contentToken instanceof EndToken)
