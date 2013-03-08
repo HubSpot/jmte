@@ -7,6 +7,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -68,7 +70,9 @@ public abstract class AbstractEngineTest {
 			+ "${if hugo}${address}${else}${if address}${address}${else}NIX${end}${end}"
 			+ "${if nix}Something${if address}${address}${end}${end}"
 			+ "${if something}${else}${if something}${else}Something${if address}${address}${end}${end}${end}"
-			+ "${foreach list item}${foreach item.list item2}${if item}${item2.property1}${end}${end}\n${end}";
+			+ "${foreach list item}${foreach item.list item2}${if item}${item2.property1}${end}${end}\n${end}"
+			+ "${if nix}${elseif something=other}${elseif address}${if something}${address}${end}${end}"
+			+ "${if nix}${elseif something=other}${elseif address=nope}${else}${something}${end}";
 	private static final int SIZE_LONG_LIST = 1000;
 
 	protected abstract Engine newEngine();
@@ -978,13 +982,24 @@ public abstract class AbstractEngineTest {
 
 	@Test
 	public void namedRenderer() throws Exception {
+		String patternToUse = "yyyy.MM.dd HH:mm:ss z";
+		
 		String output = ENGINE_WITH_NAMED_RENDERERS
 				.transform(
-						"\"${date;date(yyyy.MM.dd HH:mm:ss z)}\" and \"${int;date}\" and ${bean;date(long)} and ${address;string(this is the format(no matter what I type; - this is part of the format))}",
+						"\"${date;date(" + patternToUse +")}\" and \"${int;date}\" and ${bean;date(long)} and ${address;string(this is the format(no matter what I type; - this is part of the format))}",
 						DEFAULT_MODEL);
+		
+		
+		DateFormat dateFormat =  new SimpleDateFormat(patternToUse);
+		String firstFormat = dateFormat.format(new Date(0));
+
+		// NamedDateRenderer.DEFAULT_PATTERN
+		dateFormat =  new SimpleDateFormat("dd.MM.yyyy HH:mm:ss Z");
+		String secondFormat = dateFormat.format(new Date(0));
+				
 		assertEquals(
-				clearTimezone("\"1970.01.01 01:00:00 MEZ\" and \"01.01.1970 01:00:00 +0100\" and Render=propertyValue1 and String=Filbert(this is the format(no matter what I type; - this is part of the format))"),
-				clearTimezone(output));
+				"\"" + firstFormat + "\" and \"" + secondFormat + "\" and Render=propertyValue1 and String=Filbert(this is the format(no matter what I type; - this is part of the format))",
+				output);
 	}
 
 	private String clearTimezone(String timeString) {
@@ -1002,9 +1017,15 @@ public abstract class AbstractEngineTest {
 		};
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("date", date);
+		
+		String patternToUse = "yyyy.MM.dd HH:mm:ss z";
 		String output = ENGINE_WITH_NAMED_RENDERERS.transform(
-				"${date;date(yyyy.MM.dd HH:mm:ss z)}", model);
-		assertEquals(clearTimezone("1970.01.01 01:00:00 MEZ"), clearTimezone(output));
+				"${date;date(" + patternToUse + ")}", model);
+		
+		DateFormat dateFormat =  new SimpleDateFormat(patternToUse);
+		String format = dateFormat.format(new Date(0));
+		
+		assertEquals(clearTimezone(format), clearTimezone(output));
 	}
 
 	@Test
@@ -1157,9 +1178,10 @@ public abstract class AbstractEngineTest {
 
 		final String expected = "SOME TEXT" + "Filbert" + "String2" + "Filbert"
 				+ "Filbert" + "Filbert" + "MORE TEXT" + "Filbert" + "1.12.1\n"
-				+ "1.12.1\n";
+				+ "1.12.1\n" + "Filbert" + "something";
 
 		String output = newEngine().transform(template, DEFAULT_MODEL);
+		System.out.println(output);
 		assertEquals(expected.toString(), output);
 
 	}
