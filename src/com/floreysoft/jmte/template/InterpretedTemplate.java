@@ -13,6 +13,7 @@ import com.floreysoft.jmte.ProcessListener;
 import com.floreysoft.jmte.ProcessListener.Action;
 import com.floreysoft.jmte.ScopedMap;
 import com.floreysoft.jmte.TemplateContext;
+import com.floreysoft.jmte.token.ElseIfToken;
 import com.floreysoft.jmte.token.ElseToken;
 import com.floreysoft.jmte.token.EndToken;
 import com.floreysoft.jmte.token.ExpressionToken;
@@ -170,11 +171,39 @@ public class InterpretedTemplate extends AbstractTemplate {
 			context.pop();
 		}
 	}
+	
+	private boolean elseIfCondition(boolean inheritedSkip) {
+		ElseIfToken elseIfToken = (ElseIfToken) tokenStream.currentToken();
+		tokenStream.consume();
+		
+		context.push(elseIfToken);
+		
+		boolean localSkip;
+		try {
+			if (inheritedSkip) {
+				localSkip = true;
+			} else {
+				localSkip = !(Boolean) elseIfToken.evaluate(context);
+			}
+				
+			Token contentToken;
+			while((contentToken = tokenStream.currentToken()) != null
+					&& !(contentToken instanceof EndToken)
+					&& !(contentToken instanceof ElseToken)
+					&& !(contentToken instanceof ElseIfToken)) {
+				content(localSkip);
+			}
+		} finally {
+			context.pop();
+		}
+		
+		return localSkip;
+	}
 
 	private void condition(boolean inheritedSkip) {
 		IfToken ifToken = (IfToken) tokenStream.currentToken();
 		tokenStream.consume();
-
+		
 		context.push(ifToken);
 		try {
 			boolean localSkip;
@@ -183,19 +212,31 @@ public class InterpretedTemplate extends AbstractTemplate {
 			} else {
 				localSkip = !(Boolean) ifToken.evaluate(context);
 			}
-
+						
 			Token contentToken;
 			while ((contentToken = tokenStream.currentToken()) != null
 					&& !(contentToken instanceof EndToken)
-					&& !(contentToken instanceof ElseToken)) {
+					&& !(contentToken instanceof ElseToken)
+					&& !(contentToken instanceof ElseIfToken)) {
 				content(localSkip);
 			}
-
+			
+			boolean elseIfSkip = !localSkip;
+			boolean inheritedElseIfSkip = elseIfSkip;
+			while ((contentToken = tokenStream.currentToken()) != null
+					&& contentToken instanceof ElseIfToken) {
+				inheritedElseIfSkip = elseIfCondition(elseIfSkip);
+				
+				if (!inheritedElseIfSkip) {
+					elseIfSkip = true;
+				}
+			}
+			
 			if (contentToken instanceof ElseToken) {
 				tokenStream.consume();
 				// toggle for else branch
 				if (!inheritedSkip) {
-					localSkip = !localSkip;
+					localSkip = !localSkip || elseIfSkip;
 				}
 				context.notifyProcessListener(contentToken,
 						inheritedSkip ? Action.SKIP : Action.EVAL);
@@ -234,6 +275,8 @@ public class InterpretedTemplate extends AbstractTemplate {
 			}
 		} else if (token instanceof ForEachToken) {
 			foreach(skip);
+		} else if (token instanceof ElseIfToken) {
+			elseIfCondition(skip);
 		} else if (token instanceof IfToken) {
 			condition(skip);
 		} else if (token instanceof ElseToken) {
