@@ -17,6 +17,28 @@ import org.junit.Test;
 import com.floreysoft.jmte.template.Template;
 
 public class CompiledEngineTest extends AbstractEngineTest {
+	
+	public static final String LONG_TEMPLATE = "SOME TEXT"
+			+ "${if address='Filbert'}${address}${else}NIX${end}"
+			+ "${foreach strings string}${if string='String2'}${string}${end}${end}"
+			+ "${if bean.trueCond}${address}${else}NIX${end}"
+			+ "${if bean.trueCondObj}${address}${else}NIX${end}"
+			+ "${if map}${address}${else}NIX${end}"
+			+ "MORE TEXT"
+			+ "${if hugo}${address}${else}${if address}${address}${else}NIX${end}${end}"
+			+ "${if nix}Something${if address}${address}${end}${end}"
+			+ "${if something}${else}${if something}${else}Something${if address}${address}${end}${end}${end}"
+			+ "${foreach list item}${foreach item.list item2}${if item}${item2.property1}${end}${end}\n${end}";
+	
+	public String getLongTemplate() {
+		return LONG_TEMPLATE;
+	}
+	
+	public String getLargeTemplateExpected() {
+		return "SOME TEXT" + "Filbert" + "String2" + "Filbert"
+				+ "Filbert" + "Filbert" + "MORE TEXT" + "Filbert" + "1.12.1\n"
+				+ "1.12.1\n";
+	}
 
 	protected Engine newEngine() {
 		Engine engine = new Engine();

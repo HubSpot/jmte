@@ -76,6 +76,10 @@ public abstract class AbstractEngineTest {
 	private static final int SIZE_LONG_LIST = 1000;
 
 	protected abstract Engine newEngine();
+	
+	public String getLongTemplate() {
+		return LONG_TEMPLATE;
+	}
 
 	// used to suppress error messages on stderr
 	protected ErrorHandler getTestErrorHandler() {
@@ -1171,19 +1175,19 @@ public abstract class AbstractEngineTest {
 		assertEquals(expected.toString(), output);
 
 	}
+	
+	public String getLargeTemplateExpected() {
+		return "SOME TEXT" + "Filbert" + "String2" + "Filbert"
+				+ "Filbert" + "Filbert" + "MORE TEXT" + "Filbert" + "1.12.1\n"
+				+ "1.12.1\n" + "Filbert" + "something";
+	}
 
 	@Test
 	public void largeTemplate() throws Exception {
-		String template = LONG_TEMPLATE;
-
-		final String expected = "SOME TEXT" + "Filbert" + "String2" + "Filbert"
-				+ "Filbert" + "Filbert" + "MORE TEXT" + "Filbert" + "1.12.1\n"
-				+ "1.12.1\n" + "Filbert" + "something";
+		String template = getLongTemplate();
 
 		String output = newEngine().transform(template, DEFAULT_MODEL);
-		System.out.println(output);
-		assertEquals(expected.toString(), output);
-
+		assertEquals(getLargeTemplateExpected(), output);
 	}
 
 	@Test
