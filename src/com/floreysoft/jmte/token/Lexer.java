@@ -29,7 +29,7 @@ public class Lexer {
 		}
 		return val;
 	}
-
+	
 	private AbstractToken innerNextToken(final String untrimmedInput) {
 		final String input = Util.trimFront(untrimmedInput);
 		// annotation
@@ -58,7 +58,9 @@ public class Lexer {
 			final String cmd = split.get(0);
 			final String objectExpression = split.get(1);
 
-			if (cmd.equalsIgnoreCase(IfToken.IF)) {
+			boolean isIf = cmd.equalsIgnoreCase(IfToken.IF);
+			boolean isElseIf = cmd.equalsIgnoreCase(ElseIfToken.ELSE_IF);
+			if (isIf || isElseIf) {
 				final boolean negated;
 				final String ifExpression;
 				// TODO: Both '!' and '=' work only if there are no white space
@@ -71,7 +73,11 @@ public class Lexer {
 					ifExpression = objectExpression;
 				}
 				if (!ifExpression.contains("=")) {
-					return new IfToken(ifExpression, negated);
+					if (isIf) {
+						return new IfToken(ifExpression, negated);
+					} else {
+						return new ElseIfToken(ifExpression, negated);
+					}
 				} else {
 					final String[] ifSplit = ifExpression.split("=");
 					final String variable = ifSplit[0];
@@ -80,7 +86,11 @@ public class Lexer {
 					if (operand.startsWith("'") || operand.startsWith("\"")) {
 						operand = operand.substring(1, operand.length() - 1);
 					}
-					return new IfCmpToken(variable, operand, negated);
+					if (isIf) {
+						return new IfCmpToken(variable, operand, negated);
+					} else {
+						return new ElseIfCmpToken(variable, operand, negated);
+					}
 				}
 			}
 			if (cmd.equalsIgnoreCase(ForEachToken.FOREACH)) {
