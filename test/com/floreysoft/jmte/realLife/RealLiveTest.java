@@ -2,8 +2,6 @@ package com.floreysoft.jmte.realLife;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +26,13 @@ public class RealLiveTest {
 
 	public static String expected = Util.resourceToString(
 			"com/floreysoft/jmte/realLife/template/expected-output.txt",
+			"UTF-8");
+
+	public static String template1 = Util.resourceToString(
+			"com/floreysoft/jmte/realLife/template/email1.jmte", "UTF-8");
+
+	public static String expected1 = Util.resourceToString(
+			"com/floreysoft/jmte/realLife/template/expected-output1.txt",
 			"UTF-8");
 
 	Map<String, Object> model = new HashMap<String, Object>();
@@ -57,18 +62,23 @@ public class RealLiveTest {
 	public void shop() throws Exception {
 		Engine engine = Engine.createDefaultEngine();
 		shopTest(engine);
+		shopTest1(engine);
 	}
 
 	public void shopTest(Engine engine) throws Exception {
 		String output = shop(engine);
 		assertEquals(Util.unifyNewlines(expected), Util.unifyNewlines(output));
+	}
 
+	public void shopTest1(Engine engine) throws Exception {
+        engine.registerNamedRenderer(new LineRenderer());
+		String output = engine.transform(template1, model);
+		assertEquals(Util.unifyNewlines(expected1), Util.unifyNewlines(output));
 	}
 
 	public String shop(Engine engine) {
 		engine.registerRenderer(Date.class, new DateRenderer());
 		engine.registerNamedRenderer(new CurrencyRenderer());
 		return engine.transform(template, model);
-
 	}
 }
