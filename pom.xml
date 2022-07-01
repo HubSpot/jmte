@@ -155,11 +155,11 @@
   <distributionManagement>
     <repository>
       <id>HubSpot-Releases</id>
-      <url>http://maven.hubteam.com/nexus/content/repositories/releases</url>
+      <url>https://maven.hubteam.com/nexus/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
       <id>HubSpot-Snapshots</id>
-      <url>http://maven.hubteam.com/nexus/content/repositories/snapshots</url>
+      <url>https://maven.hubteam.com/nexus/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 </project>
